@@ -2,9 +2,14 @@
   <div class="contact-list">
     <ul class="list-group">
       <li repeat.for="contact of contacts" class="list-group-item ${contact.id === $parent.selectedId ? 'active' : ''}">
-        <a href="#/contacts/${contact.id}" click.delegate="$parent.select(contact)">
+        <a href="#/contacts/${contact.id}">
           <h4 class="list-group-item-heading">${contact.firstName} ${contact.lastName}</h4>
           <p class="list-group-item-text">${contact.email}</p>
+        </a>
+      </li>
+      <li class="list-group-item ${creating === true ? 'active' : ''}">
+        <a href="#/contacts/new">
+          + add new contact
         </a>
       </li>
     </ul>

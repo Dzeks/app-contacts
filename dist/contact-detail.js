@@ -1,55 +1,54 @@
-System.register(["./web-api", "./app"], function (_export) {
-  var WebAPI, App, _prototypeProperties, _classCallCheck, ContactDetail;
+System.register(["aurelia-event-aggregator", "./web-api", "./app", "./messages", "./toast"], function (_export) {
+  var EventAggregator, WebAPI, App, ContactUpdated, ContactViewed, Toastr, _createClass, _classCallCheck, ContactDetail;
 
   return {
-    setters: [function (_webApi) {
+    setters: [function (_aureliaEventAggregator) {
+      EventAggregator = _aureliaEventAggregator.EventAggregator;
+    }, function (_webApi) {
       WebAPI = _webApi.WebAPI;
     }, function (_app) {
       App = _app.App;
+    }, function (_messages) {
+      ContactUpdated = _messages.ContactUpdated;
+      ContactViewed = _messages.ContactViewed;
+    }, function (_toast) {
+      Toastr = _toast.Toastr;
     }],
     execute: function () {
       "use strict";
 
-      _prototypeProperties = function (child, staticProps, instanceProps) { if (staticProps) Object.defineProperties(child, staticProps); if (instanceProps) Object.defineProperties(child.prototype, instanceProps); };
+      _createClass = (function () { function defineProperties(target, props) { for (var key in props) { var prop = props[key]; prop.configurable = true; if (prop.value) prop.writable = true; } Object.defineProperties(target, props); } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
       _classCallCheck = function (instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } };
 
       ContactDetail = _export("ContactDetail", (function () {
-        function ContactDetail(app, api) {
+        function ContactDetail(app, api, ea, toastr) {
           _classCallCheck(this, ContactDetail);
 
           this.app = app;
           this.api = api;
+          this.ea = ea;
+          this.toastr = toastr;
         }
 
-        _prototypeProperties(ContactDetail, {
-          inject: {
-            value: function inject() {
-              return [App, WebAPI];
-            },
-            writable: true,
-            configurable: true
-          }
-        }, {
+        _createClass(ContactDetail, {
           activate: {
             value: function activate(params, qs, config) {
               var _this = this;
 
-              return this.api.getContactDetails(params.id).then(function (contact) {
-                _this.app.selectedId = contact.id;
+              return this.api[params.id === "new" ? "getNewContact" : "getContactDetails"](params.id).then(function (contact) {
                 _this.contact = contact;
                 config.navModel.title = contact.firstName;
                 _this.originalJSON = JSON.stringify(contact);
+                _this.ea.publish(new ContactViewed(contact));
+                return contact;
               });
-            },
-            writable: true,
-            configurable: true
+            }
           },
           canSave: {
             get: function () {
               return this.contact.firstName && this.contact.lastName && !this.api.isRequesting;
-            },
-            configurable: true
+            }
           },
           save: {
             value: function save() {
@@ -58,10 +57,13 @@ System.register(["./web-api", "./app"], function (_export) {
               this.api.saveContact(this.contact).then(function (contact) {
                 _this.contact = contact;
                 _this.originalJSON = JSON.stringify(_this.contact);
+                _this.ea.publish(new ContactUpdated(_this.contact));
+                return contact;
+              }).then(function (contact) {
+                console.log(contact);
+                _this.toastr.put(contact.firstName + " updated");
               });
-            },
-            writable: true,
-            configurable: true
+            }
           },
           canDeactivate: {
             value: function canDeactivate() {
@@ -69,16 +71,20 @@ System.register(["./web-api", "./app"], function (_export) {
                 var result = confirm("You have unsaved changes. Are you sure you wish to leave?");
 
                 if (!result) {
-                  this.app.selectedId = this.contact.id;
+                  this.ea.publish(new ContactViewed(this.contact));
                 }
 
                 return result;
               }
 
               return true;
-            },
-            writable: true,
-            configurable: true
+            }
+          }
+        }, {
+          inject: {
+            value: function inject() {
+              return [App, WebAPI, EventAggregator, Toastr];
+            }
           }
         });
 
@@ -87,4 +93,4 @@ System.register(["./web-api", "./app"], function (_export) {
     }
   };
 });
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImNvbnRhY3QtZGV0YWlsLmpzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7TUFBUSxNQUFNLEVBQ04sR0FBRyx5Q0FFRSxhQUFhOzs7O0FBSGxCLFlBQU0sV0FBTixNQUFNOztBQUNOLFNBQUcsUUFBSCxHQUFHOzs7Ozs7Ozs7QUFFRSxtQkFBYTtBQUViLGlCQUZBLGFBQWEsQ0FFWixHQUFHLEVBQUMsR0FBRztnQ0FGUixhQUFhOztBQUd0QixjQUFJLENBQUMsR0FBRyxHQUFHLEdBQUcsQ0FBQztBQUNmLGNBQUksQ0FBQyxHQUFHLEdBQUcsR0FBRyxDQUFDO1NBQ2hCOzs2QkFMVSxhQUFhO0FBQ2pCLGdCQUFNO21CQUFBLGtCQUFHO0FBQUUscUJBQU8sQ0FBQyxHQUFHLEVBQUMsTUFBTSxDQUFDLENBQUM7YUFBRTs7Ozs7QUFNeEMsa0JBQVE7bUJBQUEsa0JBQUMsTUFBTSxFQUFFLEVBQUUsRUFBRSxNQUFNLEVBQUM7OztBQUMxQixxQkFBTyxJQUFJLENBQUMsR0FBRyxDQUFDLGlCQUFpQixDQUFDLE1BQU0sQ0FBQyxFQUFFLENBQUMsQ0FBQyxJQUFJLENBQUMsVUFBQSxPQUFPLEVBQUk7QUFDM0Qsc0JBQUssR0FBRyxDQUFDLFVBQVUsR0FBRyxPQUFPLENBQUMsRUFBRSxDQUFDO0FBQ2pDLHNCQUFLLE9BQU8sR0FBRyxPQUFPLENBQUM7QUFDdkIsc0JBQU0sQ0FBQyxRQUFRLENBQUMsS0FBSyxHQUFJLE9BQU8sQ0FBQyxTQUFTLENBQUM7QUFDM0Msc0JBQUssWUFBWSxHQUFHLElBQUksQ0FBQyxTQUFTLENBQUMsT0FBTyxDQUFDLENBQUM7ZUFDN0MsQ0FBQyxDQUFDO2FBQ0o7Ozs7QUFFRyxpQkFBTztpQkFBQSxZQUFFO0FBQ1gscUJBQU8sSUFBSSxDQUFDLE9BQU8sQ0FBQyxTQUFTLElBQUksSUFBSSxDQUFDLE9BQU8sQ0FBQyxRQUFRLElBQUksQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLFlBQVksQ0FBQzthQUNsRjs7O0FBRUQsY0FBSTttQkFBQSxnQkFBRTs7O0FBQ0osa0JBQUksQ0FBQyxHQUFHLENBQUMsV0FBVyxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQyxJQUFJLENBQUMsVUFBQSxPQUFPLEVBQUk7QUFDakQsc0JBQUssT0FBTyxHQUFHLE9BQU8sQ0FBQztBQUN2QixzQkFBSyxZQUFZLEdBQUcsSUFBSSxDQUFDLFNBQVMsQ0FBQyxNQUFLLE9BQU8sQ0FBQyxDQUFDO2VBQ2xELENBQUMsQ0FBQzthQUNKOzs7O0FBRUQsdUJBQWE7bUJBQUEseUJBQUU7QUFDYixrQkFBRyxJQUFJLENBQUMsWUFBWSxJQUFJLElBQUksQ0FBQyxTQUFTLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxFQUFDO0FBQ25ELG9CQUFJLE1BQU0sR0FBRyxPQUFPLENBQUMsMkRBQTJELENBQUMsQ0FBQzs7QUFFbEYsb0JBQUcsQ0FBQyxNQUFNLEVBQUM7QUFDVCxzQkFBSSxDQUFDLEdBQUcsQ0FBQyxVQUFVLEdBQUcsSUFBSSxDQUFDLE9BQU8sQ0FBQyxFQUFFLENBQUM7aUJBQ3ZDOztBQUVELHVCQUFPLE1BQU0sQ0FBQztlQUNmOztBQUVELHFCQUFPLElBQUksQ0FBQzthQUNiOzs7Ozs7ZUF2Q1UsYUFBYSIsImZpbGUiOiJjb250YWN0LWRldGFpbC5qcyIsInNvdXJjZVJvb3QiOiIvc3JjLyJ9
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImNvbnRhY3QtZGV0YWlsLmpzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7TUFBUSxlQUFlLEVBQ2YsTUFBTSxFQUNOLEdBQUcsRUFDSCxjQUFjLEVBQUMsYUFBYSxFQUM1QixNQUFNLGlDQUVELGFBQWE7Ozs7QUFObEIscUJBQWUsMkJBQWYsZUFBZTs7QUFDZixZQUFNLFdBQU4sTUFBTTs7QUFDTixTQUFHLFFBQUgsR0FBRzs7QUFDSCxvQkFBYyxhQUFkLGNBQWM7QUFBQyxtQkFBYSxhQUFiLGFBQWE7O0FBQzVCLFlBQU0sVUFBTixNQUFNOzs7Ozs7Ozs7QUFFRCxtQkFBYTtBQUViLGlCQUZBLGFBQWEsQ0FFWixHQUFHLEVBQUMsR0FBRyxFQUFDLEVBQUUsRUFBRSxNQUFNLEVBQUM7Z0NBRnBCLGFBQWE7O0FBR3RCLGNBQUksQ0FBQyxHQUFHLEdBQUcsR0FBRyxDQUFDO0FBQ2YsY0FBSSxDQUFDLEdBQUcsR0FBRyxHQUFHLENBQUM7QUFDZixjQUFJLENBQUMsRUFBRSxHQUFHLEVBQUUsQ0FBQztBQUNiLGNBQUksQ0FBQyxNQUFNLEdBQUcsTUFBTSxDQUFDO1NBQ3RCOztxQkFQVSxhQUFhO0FBU3hCLGtCQUFRO21CQUFBLGtCQUFDLE1BQU0sRUFBRSxFQUFFLEVBQUUsTUFBTSxFQUFDOzs7QUFDMUIscUJBQU8sSUFBSSxDQUFDLEdBQUcsQ0FBQyxNQUFNLENBQUMsRUFBRSxLQUFLLEtBQUssR0FBRyxlQUFlLEdBQUcsbUJBQW1CLENBQUUsQ0FBQyxNQUFNLENBQUMsRUFBRSxDQUFDLENBQUMsSUFBSSxDQUFDLFVBQUEsT0FBTyxFQUFJO0FBQ3ZHLHNCQUFLLE9BQU8sR0FBRyxPQUFPLENBQUM7QUFDdkIsc0JBQU0sQ0FBQyxRQUFRLENBQUMsS0FBSyxHQUFHLE9BQU8sQ0FBQyxTQUFTLENBQUM7QUFDMUMsc0JBQUssWUFBWSxHQUFHLElBQUksQ0FBQyxTQUFTLENBQUMsT0FBTyxDQUFDLENBQUM7QUFDNUMsc0JBQUssRUFBRSxDQUFDLE9BQU8sQ0FBQyxJQUFJLGFBQWEsQ0FBQyxPQUFPLENBQUMsQ0FBQyxDQUFDO0FBQzVDLHVCQUFPLE9BQU8sQ0FBQztlQUNoQixDQUFDLENBQUM7YUFDSjs7QUFFRyxpQkFBTztpQkFBQSxZQUFFO0FBQ1gscUJBQU8sSUFBSSxDQUFDLE9BQU8sQ0FBQyxTQUFTLElBQUksSUFBSSxDQUFDLE9BQU8sQ0FBQyxRQUFRLElBQUksQ0FBQyxJQUFJLENBQUMsR0FBRyxDQUFDLFlBQVksQ0FBQzthQUNsRjs7QUFFRCxjQUFJO21CQUFBLGdCQUFFOzs7QUFDSixrQkFBSSxDQUFDLEdBQUcsQ0FBQyxXQUFXLENBQUMsSUFBSSxDQUFDLE9BQU8sQ0FBQyxDQUFDLElBQUksQ0FBQyxVQUFBLE9BQU8sRUFBSTtBQUNqRCxzQkFBSyxPQUFPLEdBQUcsT0FBTyxDQUFDO0FBQ3ZCLHNCQUFLLFlBQVksR0FBRyxJQUFJLENBQUMsU0FBUyxDQUFDLE1BQUssT0FBTyxDQUFDLENBQUM7QUFDakQsc0JBQUssRUFBRSxDQUFDLE9BQU8sQ0FBQyxJQUFJLGNBQWMsQ0FBQyxNQUFLLE9BQU8sQ0FBQyxDQUFDLENBQUM7QUFDbEQsdUJBQU8sT0FBTyxDQUFDO2VBQ2hCLENBQUMsQ0FBQyxJQUFJLENBQUMsVUFBQSxPQUFPLEVBQUk7QUFDakIsdUJBQU8sQ0FBQyxHQUFHLENBQUMsT0FBTyxDQUFDLENBQUM7QUFDckIsc0JBQUssTUFBTSxDQUFDLEdBQUcsQ0FBQyxPQUFPLENBQUMsU0FBUyxHQUFHLFVBQVUsQ0FBQyxDQUFDO2VBQ2pELENBQUMsQ0FBQzthQUNKOztBQUVELHVCQUFhO21CQUFBLHlCQUFFO0FBQ2Isa0JBQUcsSUFBSSxDQUFDLFlBQVksSUFBSSxJQUFJLENBQUMsU0FBUyxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsRUFBQztBQUNuRCxvQkFBSSxNQUFNLEdBQUcsT0FBTyxDQUFDLDJEQUEyRCxDQUFDLENBQUM7O0FBRWxGLG9CQUFHLENBQUMsTUFBTSxFQUFDO0FBQ1Qsc0JBQUksQ0FBQyxFQUFFLENBQUMsT0FBTyxDQUFDLElBQUksYUFBYSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsQ0FBQyxDQUFDO2lCQUNsRDs7QUFFRCx1QkFBTyxNQUFNLENBQUM7ZUFDZjs7QUFFRCxxQkFBTyxJQUFJLENBQUM7YUFDYjs7O0FBOUNNLGdCQUFNO21CQUFBLGtCQUFHO0FBQUUscUJBQU8sQ0FBQyxHQUFHLEVBQUMsTUFBTSxFQUFDLGVBQWUsRUFBQyxNQUFNLENBQUMsQ0FBQzthQUFFOzs7O2VBRHBELGFBQWEiLCJmaWxlIjoiY29udGFjdC1kZXRhaWwuanMiLCJzb3VyY2VSb290IjoiL3NyYy8ifQ==

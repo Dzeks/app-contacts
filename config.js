@@ -13,7 +13,9 @@ System.config({
     "bootstrap": "github:twbs/bootstrap@3.3.2",
     "css": "github:systemjs/plugin-css@0.1.0",
     "font-awesome": "npm:font-awesome@4.2.0",
+    "jquery": "github:components/jquery@2.1.3",
     "nprogress": "github:rstacruz/nprogress@0.1.6",
+    "toastr": "github:CodeSeven/toastr@2.1.0",
     "github:aurelia/binding@0.3.7": {
       "aurelia-dependency-injection": "github:aurelia/dependency-injection@0.4.5",
       "aurelia-metadata": "github:aurelia/metadata@0.3.3",
@@ -98,6 +100,9 @@ System.config({
     },
     "github:jspm/nodelibs-process@0.1.1": {
       "process": "npm:process@0.10.0"
+    },
+    "github:rstacruz/nprogress@0.1.6": {
+      "css": "github:systemjs/plugin-css@0.1.0"
     },
     "github:twbs/bootstrap@3.3.2": {
       "css": "github:systemjs/plugin-css@0.1.0",

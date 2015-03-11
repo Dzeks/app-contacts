@@ -71,6 +71,22 @@ export class WebAPI {
     });
   }
 
+  getNewContact(){
+    this.isRequesting = true;
+    return new Promise(resolve => {
+        setTimeout(() => {
+          resolve({
+            id:getId(),
+            firstName:'',
+            lastName:'',
+            email:'',
+            phoneNumber:''
+          });
+          this.isRequesting = false;
+    }, latency);
+    });
+  }
+
   saveContact(contact){
     this.isRequesting = true;
     return new Promise(resolve => {

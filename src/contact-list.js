@@ -16,6 +16,7 @@ export class ContactList {
     });
   }
 
+  // View created hook
   created(){
     this.api.getContactList().then(contacts => {
       this.contacts = contacts;
